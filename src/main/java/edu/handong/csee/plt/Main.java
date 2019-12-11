@@ -76,7 +76,9 @@ public class Main {
 				String result;
 				
 				try {
-					result = interpreter.interp(ast);
+//					result = interpreter.interp(ast);
+					
+					result = interpreter.interp(ast).getASTCode();
 					
 					System.out.println(result); //print out the result
 				} catch (FreeIdentifierException e) {

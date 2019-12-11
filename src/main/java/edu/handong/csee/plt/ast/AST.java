@@ -22,6 +22,15 @@ public class AST {
 		//Id
 		if(this instanceof Id)
 			astCode = ((Id)this).getASTCode();
+		
+		//Fun
+		if(this instanceof Fun)
+			astCode = ((Fun)this).getASTCode();
+		
+		//App
+		if(this instanceof App)
+			astCode = ((App)this).getASTCode();
+		
 
 		return astCode;
 	}
