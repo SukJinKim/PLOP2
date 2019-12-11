@@ -4,8 +4,10 @@ import java.util.ArrayList;
 
 import edu.handong.csee.plt.ast.AST;
 import edu.handong.csee.plt.ast.Add;
+import edu.handong.csee.plt.ast.Id;
 import edu.handong.csee.plt.ast.Num;
 import edu.handong.csee.plt.ast.Sub;
+import edu.handong.csee.plt.ast.With;
 
 public class Parser {
 
@@ -29,7 +31,29 @@ public class Parser {
 			
 			return new Sub(parse(subExpressions.get(1)),parse(subExpressions.get(2)));
 		}
-
+		
+		//with
+		if(subExpressions.get(0).equals("with")) {
+			String InV = subExpressions.get(1); //ex. {x {+ 1 2}}
+			char idtf = InV.charAt(1); //x in InV
+			String val = InV.substring(2, InV.length()-1).trim();//{+ 1 2} InV
+			String expr = subExpressions.get(2);
+			
+			//TEST
+//			System.out.println(InV);
+//			System.out.println(idtf);
+//			System.out.println(val);
+//			System.out.println(expr);
+		
+			return new With(subExpressions.get(1).charAt(1), parse(val), parse(expr)); //idtf, parse(val), parse(expr)
+		}
+		
+		//id
+		if(subExpressions.size() == 1 && Character.isLetter(subExpressions.get(0).charAt(0))) {
+			char id = subExpressions.get(0).charAt(0);
+			
+			return new Id(id);
+		}
 		
 		return null;
 	}
@@ -100,6 +124,11 @@ public class Parser {
 		}
 		
 		sexpressions.add(strBuffer);
+		
+//		TEST
+//		for(int i = 0; i < sexpressions.size(); i++) {
+//			System.out.println(sexpressions.get(i));
+//		}
 
 		return sexpressions;
 	}

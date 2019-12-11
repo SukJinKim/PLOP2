@@ -8,6 +8,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.handong.csee.plt.ast.AST;
+import edu.handong.csee.plt.ast.exception.FreeIdentifierException;
 
 public class Main {
 	
@@ -72,9 +73,16 @@ public class Main {
 				if(ast == null)
 					System.out.println("Syntax Error!");
 				
-				String result = interpreter.interp(ast);
+				String result;
 				
-				System.out.println(result); //print out the result
+				try {
+					result = interpreter.interp(ast);
+					
+					System.out.println(result); //print out the result
+				} catch (FreeIdentifierException e) {
+					System.out.println(e.getMessage());
+				}
+				
 			}
 			
 		}

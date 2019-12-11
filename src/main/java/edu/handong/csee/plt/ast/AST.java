@@ -14,6 +14,14 @@ public class AST {
 		//Sub
 		if(this instanceof Sub)
 			astCode = ((Sub)this).getASTCode();
+		
+		//With
+		if(this instanceof With)
+			astCode = ((With)this).getASTCode();
+		
+		//Id
+		if(this instanceof Id)
+			astCode = ((Id)this).getASTCode();
 
 		return astCode;
 	}
