@@ -9,7 +9,6 @@ import edu.handong.csee.plt.ast.Fun;
 import edu.handong.csee.plt.ast.Id;
 import edu.handong.csee.plt.ast.Num;
 import edu.handong.csee.plt.ast.Sub;
-import edu.handong.csee.plt.ast.With;
 
 public class Parser {
 	//TEST
@@ -43,7 +42,7 @@ public class Parser {
 			String val = InV.substring(2, InV.length()-1).trim();//{+ 1 2} in InV
 			String expr = subExpressions.get(2);
 		
-			return new App(new Fun(idtf, parse(expr)), parse(val));
+			return new App(new Fun(idtf, parse(expr)), parse(val)); //[(list 'with (list i v) e) (app (fun i (parse e)) (parse v))]
 			//return new With(subExpressions.get(1).charAt(1), parse(val), parse(expr)); //idtf, parse(val), parse(expr)
 		}
 		

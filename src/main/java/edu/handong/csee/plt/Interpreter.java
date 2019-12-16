@@ -9,9 +9,115 @@ import edu.handong.csee.plt.ast.Num;
 import edu.handong.csee.plt.ast.Sub;
 import edu.handong.csee.plt.ast.With;
 import edu.handong.csee.plt.ast.exception.FreeIdentifierException;
+import edu.handong.csee.plt.ds.ASub;
+import edu.handong.csee.plt.ds.DefrdSub;
+import edu.handong.csee.plt.ds.MtSub;
+import edu.handong.csee.plt.val.ClosureV;
+import edu.handong.csee.plt.val.FAEValue;
+import edu.handong.csee.plt.val.NumV;
 
 public class Interpreter {
+	
+	public FAEValue interp(AST ast, DefrdSub ds) throws FreeIdentifierException {
+		if(ast instanceof Num) {
+			
+			return new NumV(((Num)ast).getStrNum()); //[num    (n)      (numV n)]
+		}
+		
+		if(ast instanceof Add) {
+			Add add = (Add)ast;
+		
+			return numPlus(interp(add.getLhs(), ds), interp(add.getRhs(), ds)); //[add (l r) (num+ (interp l) (interp r))] 
+		}
+		
+		if(ast instanceof Sub) {
+			Sub sub = (Sub)ast;
+			
+			return numMinus(interp(sub.getLhs(), ds), interp(sub.getRhs(), ds)); //[sub    (l r)    (num- (interp l ds) (interp r ds))]
+		}
+		
+		if(ast instanceof Id) {
+			
+			return lookUp(((Id)ast).getId(), ds); //[id     (s)      (lookup s ds)]
+		}
+		
+		if(ast instanceof Fun) {
+			Fun fun = (Fun)ast;
+			char p = fun.getParam();
+			AST b = fun.getBody();
+			
+			return new ClosureV(p, b, ds); //[fun    (p b)    (closureV p b ds)]
+		}
+	
+		if(ast instanceof App) {
+			 //[app    (f a)    (local [(define f-val (interp f ds))
+		       //                        (define a-val (interp a ds))]
+		         //              (interp (closureV-body f-val)
+		           //                    (aSub (closureV-param f-val)
+		             //                        a-val
+		               //                      (closureV-ds f-val))))]
+			
+			App app = (App) ast;
+			AST f = app.getFtn();
+			AST a = app.getArg();
+			
+			ClosureV fVal = (ClosureV)interp(f, ds);
+			FAEValue aVal = interp(a, ds);
+			
+			return interp(fVal.getBody(), new ASub(fVal.getName(), aVal, fVal.getDs()));
+		}
+		
+		return null;
+		
+	}
+	
+	
+	private static FAEValue lookUp(char name, DefrdSub ds) throws FreeIdentifierException{
+		if(ds instanceof MtSub){
+			
+			throw new FreeIdentifierException("Free identifier"); //[mtSub () (error 'lookup "free identifier")]
+		}
+		
+		if(ds instanceof ASub) {
+			char i = ((ASub) ds).getName();
+			FAEValue v = ((ASub) ds).getValue();
+			DefrdSub saved = ((ASub) ds).getDs();
+			
+			
+			return (name == i) ? v : lookUp(name, saved); //[aSub (i v saved) (if (symbol=? i name) v (lookup name saved))]
+			
+		}
+		
+		return null;
+	}
+	
+	private static FAEValue numOp(char op, FAEValue lhs, FAEValue rhs) {
+		
+		int l = Integer.parseInt(((NumV)lhs).getStrNum());
+		int r = Integer.parseInt(((NumV)rhs).getStrNum());
+		
+		String add = "" + (l + r);
+		String sub = "" + (l - r);
+		
+		return (op == '+') ? new NumV(add) : new NumV(sub); 
+	}
+	
+	private static FAEValue numPlus(FAEValue faeValue, FAEValue faeValue2) {
+		
+		return numOp('+', faeValue, faeValue2);
+	}
+	
+	private static FAEValue numMinus(FAEValue lhs, FAEValue rhs) {
+		
+		return numOp('-', lhs, rhs);
+	}
 
+	/**
+	 * @deprecated it's not used anymore
+	 * @param ast
+	 * @return
+	 * @throws FreeIdentifierException
+	 *
 	public AST interp(AST ast) throws FreeIdentifierException {
 		
 		if(ast instanceof Num) {
@@ -68,27 +174,15 @@ public class Interpreter {
 		
 		return null;
 	}
+	*/
 	
-	private static AST numOp(char op, AST lhs, AST rhs) {
-		int l = Integer.parseInt(((Num)lhs).getStrNum());
-		int r = Integer.parseInt(((Num)rhs).getStrNum());
-		
-		String add = "" + (l+r);
-		String sub = "" + (l-r);
-		
-		return (op == '+') ?  new Num(add) : new Num(sub);
-	}
-	
-	private static AST numPlus(AST lhs, AST rhs) {
-		
-		return numOp('+', lhs, rhs);
-	}
-	
-	private static AST numMinus(AST lhs, AST rhs) {
-		
-		return numOp('-', lhs, rhs);
-	}
-	
+	/**
+	 * @deprecated it's not used anymore.
+	 * @param expr
+	 * @param idtf
+	 * @param val
+	 * @return
+	 *
 	private static AST subst(AST expr, char idtf, AST val) {
 		
 		if(expr instanceof Num) { //[num (n) wae]
@@ -151,5 +245,5 @@ public class Interpreter {
 		}
 		
 		return expr;
-	}
+	}*/
 }

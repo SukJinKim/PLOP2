@@ -31,7 +31,6 @@ public class AST {
 		if(this instanceof App)
 			astCode = ((App)this).getASTCode();
 		
-
 		return astCode;
 	}
 }

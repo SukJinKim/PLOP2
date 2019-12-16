@@ -9,6 +9,7 @@ import org.apache.commons.cli.ParseException;
 
 import edu.handong.csee.plt.ast.AST;
 import edu.handong.csee.plt.ast.exception.FreeIdentifierException;
+import edu.handong.csee.plt.ds.MtSub;
 
 public class Main {
 	
@@ -78,7 +79,8 @@ public class Main {
 				try {
 //					result = interpreter.interp(ast);
 					
-					result = interpreter.interp(ast).getASTCode();
+//					result = interpreter.interp(ast).getASTCode();
+					result = interpreter.interp(ast, new MtSub()).getFAEValue();
 					
 					System.out.println(result); //print out the result
 				} catch (FreeIdentifierException e) {
