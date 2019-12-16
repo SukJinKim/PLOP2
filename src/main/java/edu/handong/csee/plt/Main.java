@@ -80,6 +80,7 @@ public class Main {
 //					result = interpreter.interp(ast);
 					
 //					result = interpreter.interp(ast).getASTCode();
+					
 					result = interpreter.interp(ast, new MtSub()).getFAEValue();
 					
 					System.out.println(result); //print out the result
