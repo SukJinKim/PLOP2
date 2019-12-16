@@ -43,7 +43,8 @@ public class Parser {
 			String val = InV.substring(2, InV.length()-1).trim();//{+ 1 2} in InV
 			String expr = subExpressions.get(2);
 		
-			return new With(subExpressions.get(1).charAt(1), parse(val), parse(expr)); //idtf, parse(val), parse(expr)
+			return new App(new Fun(idtf, parse(expr)), parse(val));
+			//return new With(subExpressions.get(1).charAt(1), parse(val), parse(expr)); //idtf, parse(val), parse(expr)
 		}
 		
 		//id
