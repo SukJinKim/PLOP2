@@ -14,6 +14,11 @@ public class DefrdSub {
 		if(this instanceof ASub)
 			defrdSub = ((ASub)this).getDefrdSub();
 		
+		//ARecSub
+		if(this instanceof ARecSub)
+			defrdSub = ((ARecSub)this).getDefrdSub();
+			
+		
 		return defrdSub;
 		
 	}

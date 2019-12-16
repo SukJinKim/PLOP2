@@ -31,6 +31,14 @@ public class AST {
 		if(this instanceof App)
 			astCode = ((App)this).getASTCode();
 		
+		//If0
+		if(this instanceof If0)
+			astCode = ((If0)this).getASTCode();
+		
+		//Rec
+		if(this instanceof Rec)
+			astCode = ((Rec)this).getASTCode();
+		
 		return astCode;
 	}
 }

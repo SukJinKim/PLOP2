@@ -8,6 +8,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.handong.csee.plt.ast.AST;
+import edu.handong.csee.plt.ast.exception.BoxTypeException;
 import edu.handong.csee.plt.ast.exception.FreeIdentifierException;
 import edu.handong.csee.plt.ds.MtSub;
 
@@ -19,7 +20,7 @@ public class Main {
 	
 	public static void main(String[] args) {
 		Main main = new Main();
-		
+	
 		main.run(args);
 	}
 	
@@ -81,10 +82,10 @@ public class Main {
 					
 //					result = interpreter.interp(ast).getASTCode();
 					
-					result = interpreter.interp(ast, new MtSub()).getFAEValue();
+					result = Interpreter.interp(ast, new MtSub()).getFAEValue();
 					
 					System.out.println(result); //print out the result
-				} catch (FreeIdentifierException e) {
+				} catch (FreeIdentifierException | BoxTypeException e) {
 					System.out.println(e.getMessage());
 				}
 				

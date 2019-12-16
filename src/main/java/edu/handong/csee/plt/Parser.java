@@ -7,7 +7,9 @@ import edu.handong.csee.plt.ast.Add;
 import edu.handong.csee.plt.ast.App;
 import edu.handong.csee.plt.ast.Fun;
 import edu.handong.csee.plt.ast.Id;
+import edu.handong.csee.plt.ast.If0;
 import edu.handong.csee.plt.ast.Num;
+import edu.handong.csee.plt.ast.Rec;
 import edu.handong.csee.plt.ast.Sub;
 
 public class Parser {
@@ -38,6 +40,7 @@ public class Parser {
 		//with
 		if(subExpressions.get(0).equals("with")) {
 			String InV = subExpressions.get(1); //ex. {x {+ 1 2}}
+			
 			char idtf = InV.charAt(1); //x in InV
 			String val = InV.substring(2, InV.length()-1).trim();//{+ 1 2} in InV
 			String expr = subExpressions.get(2);
@@ -65,10 +68,33 @@ public class Parser {
 			return new Fun(p, parse(body)); //[(list 'fun (list p) b) (fun p (parse b))]
 		}
 		
+		//if0
+		if(subExpressions.get(0).equals("if0")) { 
+			String testExpr = subExpressions.get(1);
+			String thenExpr = subExpressions.get(2);
+			String elseExpr = subExpressions.get(3);
+					
+			return new If0(parse(testExpr), parse(thenExpr), parse(elseExpr)); //[(list 'if0 test then else)(if0 (parse test) (parse then) (parse else))]
+		}
+				
+				
+		//rec
+		if(subExpressions.get(0).equals("rec")) { 
+			String nameNnameExpr = subExpressions.get(1);
+			String fstCall = subExpressions.get(2);
+					
+			char name = nameNnameExpr.charAt(1);
+			
+			String nameExpr = nameNnameExpr.substring(nameNnameExpr.indexOf("{fun"), nameNnameExpr.length()-2).trim();
+					
+			return new Rec(name, parse(nameExpr), parse(fstCall)); //[(list 'rec (list name named-expr) fst-call) (rec name (parse named-expr) (parse fst-call))]
+			}
+		
 		//app
 		//TEST cases
 		//{{fun {x} {+ x 1}} 10}
 		//{with {x 3} {with {f {fun {y} {+ x y}}} {with {x 5} {f 4}}}}
+//		if(subExpressions.size() == 2 && subExpressions.get(0).contains("{fun")) {
 		if(subExpressions.size() == 2) {
 			
 			String ftn = subExpressions.get(0);
@@ -172,9 +198,9 @@ public class Parser {
 //		System.out.println("\t cnt : " + cnt);
 //		
 //		for(int i = 0; i < sexpressions.size(); i++) {
-//			System.out.println(sexpressions.get(i));
+//			System.out.println(i + ": " +sexpressions.get(i));
 //		}
-//		
+		
 //		cnt++;
 
 		return sexpressions;

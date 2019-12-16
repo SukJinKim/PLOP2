@@ -14,7 +14,9 @@ public class FAEValue {
 		if(this instanceof ClosureV)
 			faeValue = ((ClosureV)this).getFAEValue();
 		
-		
+		//ExprV
+		if(this instanceof ExprV)
+			faeValue = ((ExprV)this).getFAEValue();
 		
 		return faeValue;
 		

@@ -5,20 +5,25 @@ import edu.handong.csee.plt.ast.Add;
 import edu.handong.csee.plt.ast.App;
 import edu.handong.csee.plt.ast.Fun;
 import edu.handong.csee.plt.ast.Id;
+import edu.handong.csee.plt.ast.If0;
 import edu.handong.csee.plt.ast.Num;
+import edu.handong.csee.plt.ast.Rec;
 import edu.handong.csee.plt.ast.Sub;
-import edu.handong.csee.plt.ast.With;
+import edu.handong.csee.plt.ast.exception.BoxTypeException;
 import edu.handong.csee.plt.ast.exception.FreeIdentifierException;
+import edu.handong.csee.plt.box.Box;
+import edu.handong.csee.plt.ds.ARecSub;
 import edu.handong.csee.plt.ds.ASub;
 import edu.handong.csee.plt.ds.DefrdSub;
 import edu.handong.csee.plt.ds.MtSub;
 import edu.handong.csee.plt.val.ClosureV;
+import edu.handong.csee.plt.val.ExprV;
 import edu.handong.csee.plt.val.FAEValue;
 import edu.handong.csee.plt.val.NumV;
 
 public class Interpreter {
 	
-	public FAEValue interp(AST ast, DefrdSub ds) throws FreeIdentifierException {
+	public static FAEValue interp(AST ast, DefrdSub ds) throws FreeIdentifierException, BoxTypeException {
 		if(ast instanceof Num) {
 			
 			return new NumV(((Num)ast).getStrNum()); //[num    (n)      (numV n)]
@@ -50,29 +55,99 @@ public class Interpreter {
 		}
 	
 		if(ast instanceof App) {
-			 //[app    (f a)    (local [(define f-val (interp f ds))
-		       //                        (define a-val (interp a ds))]
-		         //              (interp (closureV-body f-val)
-		           //                    (aSub (closureV-param f-val)
-		             //                        a-val
-		               //                      (closureV-ds f-val))))]
+//			[app  (f a) (local [(define ftn (interp f ds))]
+//                    (interp (closureV-body ftn)
+//                                 (aSub (closureV-param ftn)
+//                                             (interp a ds)
+//                                             (closureV-ds ftn))))]
 			
 			App app = (App) ast;
 			AST f = app.getFtn();
 			AST a = app.getArg();
 			
-			ClosureV fVal = (ClosureV)interp(f, ds);
-			FAEValue aVal = interp(a, ds);
+			ClosureV ftn = (ClosureV) interp(f, ds);
+			return interp(ftn.getBody(), new ASub(ftn.getName(), interp(a, ds), ftn.getDs()));
+
+//			[app (f a)   (local [(define f-val (strict (interp f ds)))
+//		                          (define a-val (exprV a ds (box #f)))]
+//		                    (interp (closureV-body f-val)
+//		                            (aSub (closureV-param f-val)
+//		                                  a-val
+//		                                  (closureV-ds f-val))))]
 			
-			return interp(fVal.getBody(), new ASub(fVal.getName(), aVal, fVal.getDs()));
+			
+//			ClosureV fVal = (ClosureV)strict(interp(f, ds));
+//			FAEValue fVal = strict(interp(f, ds));
+//			ExprV aVal = new ExprV(a, ds, new Box<Boolean>(false));
+			
+//			return interp(fVal.getBody(), new ASub(fVal.getName(), aVal, fVal.getDs()));
+	
+		}
+		
+		if(ast instanceof If0) {
+//			(if (numzero? (interp test-expr ds))
+//                (interp then-expr ds)
+//                (interp else-expr ds))
+			
+			If0 ifZero = (If0) ast;
+			
+			return (isZero((NumV)interp(ifZero.getTestExpr(), ds))) ? interp(ifZero.getThenExpr(), ds) : interp(ifZero.getElseExpr(), ds);
+		}
+		
+		if(ast instanceof Rec) {
+//			[rec  (bound-id named-expr fst-call)
+//             (local [(define value-holder (box (numV 198)))
+//                         (define new-ds (aRecSub bound-id
+//                                                 value-holder
+//                                                 ds))]
+//               (begin
+//                             (set-box! value-holder (interp named-expr new-ds))
+//                             (interp fst-call new-ds)))]))
+			Rec rec = (Rec) ast;
+			char boundId = rec.getName();
+			AST namedExpr = rec.getNamedExpr();
+			AST fstCall = rec.getFstCall();
+		
+			Box<FAEValue> valueHolder = new Box<FAEValue>(new NumV("198"));
+			ARecSub newDS = new ARecSub(boundId, valueHolder, ds);
+	
+			valueHolder.setBoxVal(interp(namedExpr, newDS));
+			
+			return interp(fstCall, newDS);
 		}
 		
 		return null;
 		
 	}
 	
+	private static FAEValue strict(FAEValue v) throws FreeIdentifierException, BoxTypeException {
+		if(v instanceof ExprV) {
+			//[exprV (expr ds v-box)
+             //(if (not (unbox v-box))
+               //  (local [(define v (strict (interp expr ds)))]
+                 //  (begin (set-box! v-box v)
+                   //       v)) ;true
+                 //(unbox v-box))] ;false
+			
+			boolean vBox = (boolean) ((ExprV) v).getVal().getBoxVal();
+			AST expr = ((ExprV) v).getExpr();
+			DefrdSub ds = ((ExprV) v).getDs();
+			
+			if(!vBox) {
+				FAEValue val = strict(interp(expr, ds));
+				((ExprV) v).setVal(new Box<FAEValue>(val));
+				
+				return v;
+			}else {
+				return (FAEValue) ((ExprV) v).getVal().getBoxVal();
+			}
+		}
+		
+		return v;
+	}
 	
-	private static FAEValue lookUp(char name, DefrdSub ds) throws FreeIdentifierException{
+	
+	private static FAEValue lookUp(char name, DefrdSub ds) throws FreeIdentifierException, BoxTypeException{
 		if(ds instanceof MtSub){
 			
 			throw new FreeIdentifierException("Free identifier"); //[mtSub () (error 'lookup "free identifier")]
@@ -84,14 +159,28 @@ public class Interpreter {
 			DefrdSub saved = ((ASub) ds).getDs();
 			
 			
-			return (name == i) ? v : lookUp(name, saved); //[aSub (i v saved) (if (symbol=? i name) v (lookup name saved))]
+			return (name == i) ? strict(v) : lookUp(name, saved); //[aSub (i v saved) (if (symbol=? i name) v (lookup name saved))]
 			
+		}
+		
+		if(ds instanceof ARecSub) {	
+			char subName = ((ARecSub)ds).getName();
+			DefrdSub restDS = ((ARecSub)ds).getDs();
+			
+			
+			return (name == subName) ? ((ARecSub)ds).getValueBox().getBoxVal() : lookUp(name, restDS); //[aRecSub (sub-name val-box rest-ds (if (symbol=? sub-name name) (unbox val-box) (lookup name rest-ds))]
 		}
 		
 		return null;
 	}
 	
-	private static FAEValue numOp(char op, FAEValue lhs, FAEValue rhs) {
+	private static boolean isZero(NumV n) {
+		int num = Integer.parseInt(n.getStrNum());
+		
+		return (num == 0);
+	}
+	
+	private static FAEValue numOp(char op, FAEValue lhs, FAEValue rhs) throws FreeIdentifierException, BoxTypeException {
 		
 		int l = Integer.parseInt(((NumV)lhs).getStrNum());
 		int r = Integer.parseInt(((NumV)rhs).getStrNum());
@@ -99,15 +188,18 @@ public class Interpreter {
 		String add = "" + (l + r);
 		String sub = "" + (l - r);
 		
-		return (op == '+') ? new NumV(add) : new NumV(sub); 
-	}
-	
-	private static FAEValue numPlus(FAEValue faeValue, FAEValue faeValue2) {
+		NumV addNumV = (NumV) strict(new NumV(add));
+		NumV subNumV = (NumV) strict(new NumV(sub));
 		
-		return numOp('+', faeValue, faeValue2);
+		return (op == '+') ? addNumV : subNumV; //(numV (op (numV-n (strict x)) (numV-n (strict y))))
 	}
 	
-	private static FAEValue numMinus(FAEValue lhs, FAEValue rhs) {
+	private static FAEValue numPlus(FAEValue lhs, FAEValue rhs) throws FreeIdentifierException, BoxTypeException {
+		
+		return numOp('+', lhs, rhs);
+	}
+	
+	private static FAEValue numMinus(FAEValue lhs, FAEValue rhs) throws FreeIdentifierException, BoxTypeException {
 		
 		return numOp('-', lhs, rhs);
 	}
