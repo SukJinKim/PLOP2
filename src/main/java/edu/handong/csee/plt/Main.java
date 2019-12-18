@@ -8,9 +8,12 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.handong.csee.plt.ast.AST;
+import edu.handong.csee.plt.ast.exception.ApplyingNumberException;
 import edu.handong.csee.plt.ast.exception.BoxTypeException;
 import edu.handong.csee.plt.ast.exception.FreeIdentifierException;
+import edu.handong.csee.plt.ast.exception.NoValueException;
 import edu.handong.csee.plt.ds.MtSub;
+import edu.handong.csee.plt.store.MtSto;
 
 public class Main {
 	
@@ -20,7 +23,7 @@ public class Main {
 	
 	public static void main(String[] args) {
 		Main main = new Main();
-	
+		
 		main.run(args);
 	}
 	
@@ -62,14 +65,16 @@ public class Main {
 
 		if(parseOptions(options, args)){
 			if(onlyParser) {
-				ast = parser.parse(codeForParsing);
+				code = codeForParsing.replaceAll("\\n", "");
+				
+				ast = parser.parse(code);
 				
 				if(ast == null)
 					System.out.println("Syntax Error!");
 				
 				System.out.println(ast.getASTCode()); //print out the code parsed
 			}else {
-				code = args[0];
+				code = args[0].replaceAll("\\n", "");
 				ast = parser.parse(code);
 				
 				if(ast == null)
@@ -78,14 +83,11 @@ public class Main {
 				String result;
 				
 				try {
-//					result = interpreter.interp(ast);
 					
-//					result = interpreter.interp(ast).getASTCode();
-					
-					result = Interpreter.interp(ast, new MtSub()).getFAEValue();
+					result = Interpreter.interp(ast, new MtSub(), new MtSto()).getValNSto();
 					
 					System.out.println(result); //print out the result
-				} catch (FreeIdentifierException | BoxTypeException e) {
+				} catch (FreeIdentifierException | BoxTypeException | ApplyingNumberException | NoValueException e) {
 					System.out.println(e.getMessage());
 				}
 				

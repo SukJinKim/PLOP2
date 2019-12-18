@@ -18,6 +18,14 @@ public class FAEValue {
 		if(this instanceof ExprV)
 			faeValue = ((ExprV)this).getFAEValue();
 		
+		//BoxV
+		if(this instanceof BoxV)
+			faeValue = ((BoxV)this).getFAEValue();
+		
+		//RefClosV
+		if(this instanceof RefClosV)
+			faeValue = ((RefClosV)this).getFAEValue();
+		
 		return faeValue;
 		
 	}

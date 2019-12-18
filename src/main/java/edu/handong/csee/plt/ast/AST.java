@@ -39,6 +39,30 @@ public class AST {
 		if(this instanceof Rec)
 			astCode = ((Rec)this).getASTCode();
 		
+		//ReFun
+		if(this instanceof ReFun)
+			astCode = ((ReFun)this).getASTCode();
+		
+		//NewBox
+		if(this instanceof NewBox)
+			astCode = ((NewBox)this).getASTCode();
+		
+		//SetBox
+		if(this instanceof SetBox)
+			astCode = ((SetBox)this).getASTCode();
+		
+		//OpenBox
+		if(this instanceof OpenBox)
+			astCode = ((OpenBox)this).getASTCode();
+		
+		//Seqn
+		if(this instanceof Seqn)
+			astCode = ((Seqn)this).getASTCode();
+		
+		//SetVar
+		if(this instanceof SetVar)
+			astCode = ((SetVar)this).getASTCode();
+		
 		return astCode;
 	}
 }
